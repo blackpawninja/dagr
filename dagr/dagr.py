@@ -155,9 +155,13 @@ class Dagr:
             mod_time = mktime(parsedate(get_resp.headers.get("last-modified")))
             utime(file_name, (mod_time, mod_time))
 
-        if get_resp.headers.get("content-type"):
-            rename(file_name, file_name + guess_extension(
-                get_resp.headers.get("content-type").split(";")[0]))
+        contentType = get_resp.headers.get("content-type")
+        if contentType:
+            file_ext = guess_extension(contentType.split(";")[0])
+            if (file_ext is None):
+                file_ext = "." + contentType.split("/")[1]
+                
+            rename(file_name, file_name + file_ext)
 
         return file_name
 
@@ -303,6 +307,9 @@ class Dagr:
                     self.get(filelink, base_dir + "/" + filename)
                 except DagrException as get_error:
                     self.handle_download_error(link, get_error)
+                    continue
+                except:
+                    print("Unexpected error: ", sys.exc_info()[0])
                     continue
                 else:
                     if link not in existing_pages:
